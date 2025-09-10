@@ -19,10 +19,11 @@ mongoose.connect(process.env.MONGO_URI, {
 .catch(err => console.log("MongoDB connection error:", err));
 
 // --- Routes ---
+
 // Get all posts
 app.get('/posts', async (req, res) => {
     try {
-        const posts = await Post.find();
+        const posts = await Post.find().sort({ createdAt: -1 }); // latest posts first
         res.json(posts);
     } catch (err) {
         res.status(500).json({ message: err.message });
@@ -54,6 +55,19 @@ app.post('/posts', async (req, res) => {
         res.status(201).json(savedPost);
     } catch (err) {
         res.status(400).json({ message: err.message });
+    }
+});
+
+// Delete a post by ID ✅
+app.delete('/posts/:id', async (req, res) => {
+    try {
+        const post = await Post.findById(req.params.id);
+        if (!post) return res.status(404).json({ message: "Post not found" });
+
+        await post.remove();
+        res.json({ message: "Post deleted successfully" });
+    } catch (err) {
+        res.status(500).json({ message: err.message });
     }
 });
 
